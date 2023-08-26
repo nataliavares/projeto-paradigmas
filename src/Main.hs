@@ -6,7 +6,7 @@ import System.Random
 data Player = Player { playerPosition :: Float }
 data Obstacle = Obstacle { obstaclePosition :: Float, obstacleY :: Float }
 data GameStatus = Running | GameOver deriving Eq
-type GameState = (Player, [Obstacle], StdGen, Float, GameStatus)
+type GameState = (Player, [Obstacle], StdGen, Float, GameStatus, Int)
 
 windowWidth :: Float
 windowWidth = 800
