@@ -18,8 +18,7 @@ obstacleSpeed :: Float
 obstacleSpeed = 5
 
 playerSpeed :: Float
-playerSpeed = 5
-    
+playerSpeed = obstacleSpeed    
 
 initialState :: StdGen -> GameState
 initialState g = (Player 0, [], g, 0, Running, 0)
