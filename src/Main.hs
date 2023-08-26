@@ -11,6 +11,9 @@ type GameState = (Player, [Obstacle], StdGen, Float, GameStatus, Int)
 windowWidth :: Float
 windowWidth = 800
 
+windowHeigth :: Float
+windowHeigth = 600
+
 playerSpeed :: Float
 playerSpeed = 5
 
@@ -28,7 +31,7 @@ render (player, obstacles, _, _, status, points) =
         GameOver ->
             pictures [scorePic, gameOverPic]
   where
-    scorePic = translate (-windowWidth / 2 + 10) (windowWidth / 2 - 20) $ scale 0.2 0.2 $ color white $ text $ "Score: " ++ show points
+    scorePic = translate (-windowWidth/2 + 20) (windowHeigth/2) $ scale 0.2 0.2 $ color black $ text $ "Score: " ++ show points
     playerPic = translate (playerPosition player) (-340) $ color red $ rectangleSolid 50 50
     obstaclePic obs = translate (obstaclePosition obs) (obstacleY obs) $ color blue $ rectangleSolid 50 100
     obstaclesPic = pictures $ map obstaclePic obstacles
