@@ -18,7 +18,7 @@ obstacleSpeed :: Float
 obstacleSpeed = 5
 
 initialState :: StdGen -> GameState
-initialState g = (Player 0, [], g, 0, Running)
+initialState g = (Player 0, [], g, 0, Running, 0)
 
 render :: GameState -> Picture
 render (player, obstacles, _, _, status) = 
