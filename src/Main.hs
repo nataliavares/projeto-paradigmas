@@ -42,14 +42,18 @@ update :: Float -> GameState -> GameState
 update t (player, obstacles, gen, time, status, points) 
     | status == GameOver = (player, obstacles, gen, time, GameOver, points)
     | any (collides player) obstacles = (player, obstacles, gen, time, GameOver, points)
-    | time > 1  = (player, newObstacle : movedObstacles, newGen, 0, Running, points + 1)
+    | time > 1  = (player, newObstacle : movedObstacles, newGen, 0, Running, newPoints)
     | otherwise = (player, movedObstacles, gen, time + t, Running, points)
   where
     movedObstacles = filter (\o -> obstacleY o > -400) $ map moveObstacle obstacles
-    moveObstacle obs = obs { obstacleY = obstacleY obs - obstacleSpeed }
+    moveObstacle obs = obs { obstacleY = obstacleY obs - currentObstacleSpeed }
 
     (obstaclePos, newGen) = randomR (-windowWidth / 2 + 25, windowWidth / 2 - 25) gen
     newObstacle = Obstacle obstaclePos 400
+    
+    currentObstacleSpeed = if points `mod` 10 == 0 then obstacleSpeed + 3 else obstacleSpeed --aumenta a velocidade dos obstáculos em 3 a cada 10 pts
+    curret
+    updatedPoints = points + 1
 
 handleKeys :: Event -> GameState -> GameState
 handleKeys (EventKey (SpecialKey KeyLeft) Down _ _) (player, obs, gen, t, status, points)
