@@ -14,11 +14,11 @@ windowWidth = 800
 windowHeigth :: Float
 windowHeigth = 600
 
-playerSpeed :: Float
-playerSpeed = 5
-
 obstacleSpeed :: Float
 obstacleSpeed = 5
+
+playerSpeed :: Float
+playerSpeed = obstacleSpeed
 
 initialState :: StdGen -> GameState
 initialState g = (Player 0, [], g, 0, Running, 0)
