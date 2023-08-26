@@ -6,6 +6,8 @@ import System.Random
 -- Definição dos tipos de dados
 --
 
+-- teste
+
 data Player = Player { playerPosition :: Float }
 
 data Obstacle = Obstacle { obstaclePosition :: Float
