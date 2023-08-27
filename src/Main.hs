@@ -114,7 +114,7 @@ update t (player, obstacles, gen, time, status, score)
     | otherwise = (player, movedObstacles, gen, time + t, Running, score)
   where
     movedObstacles = filter (\o -> obstacleY o > -400) $ map moveObstacle obstacles
-    moveObstacle obs = obs { obstacleY = obstacleY obs - obstacleSpeed }
+    moveObstacle obs = obs { obstacleY = obstacleY obs - currentObstacleSpeed }
 
     (obstaclePos, newGen) = randomR (-windowWidth / 2 + 25, windowWidth / 2 - 25) gen
     newObstacle = Obstacle obstaclePos 400
