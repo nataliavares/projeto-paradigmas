@@ -36,11 +36,6 @@ obstacleSpeed = 5
 playerSpeed :: Float
 playerSpeed = 5
 
-currentObstacleSpeed :: Int -> Float
-currentObstacleSpeed score 
-    |score < 10 = obstacleSpeed
-    |otherwise = obstacleSpeed + fromIntegral (score `div` 10)
-
 --
 -- Função para o estado inicial
 --
@@ -113,21 +108,21 @@ boldText x y c str =
 --
 
 update :: Float -> GameState -> GameState
-update t state@(_, _, _, _, Menu, _) = state
-update t (player, obstacles, gen, time, status, score)
-    | status == GameOver = (player, obstacles, gen, time, GameOver, score)
-    | any (collisionDetected player) obstacles = (player, obstacles, gen, time, GameOver, score)
-    | time > 1  = (player, newObstacle : movedObstacles, newGen, 0, Running, newScore)
-    | otherwise = (player, movedObstacles, gen, time + t, Running, score)
+update t state@(_, _, _, _, Menu, _, _) = state
+update t (player, obstacles, gen, time, status, score, obsSpeed) 
+    | status == GameOver = (player, obstacles, gen, time, GameOver, score, obsSpeed)
+    | any (collisionDetected player) obstacles = (player, obstacles, gen, time, GameOver, score, obsSpeed)
+    | time > 1  = (player, newObstacle : movedObstacles, newGen, 0, Running, newScore, newObsSpeed)
+    | otherwise = (player, movedObstacles, gen, time + t, Running, score, obsSpeed)
   where
     movedObstacles = filter (\o -> obstacleY o > -400) $ map moveObstacle obstacles
-    moveObstacle obs = obs { obstacleY = obstacleY obs - currentSpeed }
+    moveObstacle obs = obs { obstacleY = obstacleY obs - obsSpeed }
 
     (obstaclePos, newGen) = randomR (-windowWidth / 2 + 25, windowWidth / 2 - 25) gen
     newObstacle = Obstacle obstaclePos 400
     
     newScore = score + 1
-    currentSpeed = currentObstacleSpeed newScore --aumenta a velocidade dos obstáculos em 3 a cada 10 pts
+    newObsSpeed = if newScore `mod` 10 == 0 then obsSpeed + 3 else obsSpeed
 
 
 
