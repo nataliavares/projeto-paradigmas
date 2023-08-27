@@ -107,7 +107,7 @@ boldText x y c str =
 
 update :: Float -> GameState -> GameState
 update t state@(_, _, _, _, Menu, _) = state
-update t (player, obstacles, gen, time, status, score) 
+update t (player, obstacles, gen, time, status, score)
     | status == GameOver = (player, obstacles, gen, time, GameOver, score)
     | any (collisionDetected player) obstacles = (player, obstacles, gen, time, GameOver, score)
     | time > 1  = (player, newObstacle : movedObstacles, newGen, 0, Running, newScore)
@@ -119,8 +119,10 @@ update t (player, obstacles, gen, time, status, score)
     (obstaclePos, newGen) = randomR (-windowWidth / 2 + 25, windowWidth / 2 - 25) gen
     newObstacle = Obstacle obstaclePos 400
 
-    currentObstacleSpeed = if score `mod` 10 == 0 then obstacleSpeed + 3 else obstacleSpeed --aumenta a velocidade dos obstáculos em 3 a cada 10 pts
+    -- Adjusted the calculation of currentObstacleSpeed
+    currentObstacleSpeed = if score `mod` 10 == 0 then obstacleSpeed + fromIntegral (score `div` 10) * 3 else obstacleSpeed
     newScore = score + 1
+
 
 
 main :: IO ()
