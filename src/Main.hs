@@ -87,11 +87,11 @@ render (player, obstacles, _, _, status, score, obsSpeed, record) =
     case status of
         Menu     -> pictures [menuPic, menuStart]
         Running  -> pictures [scorePic, levelPic, recordPic, playerPic, obstaclesPic, drawVerticalLine]
-        GameOver -> pictures [scorePic, levelPic, gameOverPic, gameOverRestart]
+        GameOver -> pictures [scorePic, levelPic, recordPic, gameOverPic, gameOverRestart]
   where
     scorePic = normalText (-windowWidth/2 + 5) (windowHeigth/2 - 30) white ("Score: " ++ show score)
     levelPic = normalText (-windowWidth/2 + 5) (windowHeigth/2 - 60) white ("Level: " ++ show (calculateLevel obsSpeed))
-    recordPic = normalText (-windowWidth/2 + 5) (windowHeigth/2 - 90) white ("Record: " ++ show record)
+    recordPic = normalText (-windowWidth/2 + 5) (windowHeigth/2 - 120) white ("Record: " ++ show record)
     playerPic = drawCarPlayer (playerPosition player) (-250) blue
     obstaclePic obs = drawCarObstacle (obstaclePosition obs) (obstacleY obs) red
     obstaclesPic = pictures $ map obstaclePic obstacles
