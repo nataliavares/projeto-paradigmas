@@ -16,7 +16,8 @@ data Obstacle = Obstacle { obstaclePosition :: Float
 data GameStatus = Menu | Running | GameOver
       deriving Eq
 
-type GameState = (Player, [Obstacle], StdGen, Float, GameStatus, Int)
+type GameState = (Player, [Obstacle], StdGen, Float, GameStatus, Int, Float) 
+-- Int é a pontuação e Float é a velocidade atual dos obstáculos
 
 
 --
@@ -25,38 +26,42 @@ type GameState = (Player, [Obstacle], StdGen, Float, GameStatus, Int)
 
 windowWidth :: Float
 windowWidth = 800
+
 windowHeigth :: Float
 windowHeigth = 600
-playerSpeed :: Float
-playerSpeed = 5
+
 obstacleSpeed :: Float
 obstacleSpeed = 5
+
+playerSpeed :: Float
+playerSpeed = 5
 
 --
 -- Função para o estado inicial
 --
 
 initialState :: StdGen -> GameState
-initialState g = (Player 0, [], g, 0, Menu, 0)
+initialState g = (Player 0, [], g, 0, Menu, 0, obstacleSpeed)
 
 --
 -- Função para leitura dos inputs do teclado
 --
 
 handleKeys :: Event -> GameState -> GameState
-handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (_, obs, gen, t, Menu, score) = 
-    (Player 0, obs, gen, t, Running, score)
-handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (_, _, gen, _, GameOver, _) = 
+handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (_, obs, gen, t, Menu, score, obsSpeed) = 
+    (Player 0, obs, gen, t, Running, score, obsSpeed)
+handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (_, _, gen, _, GameOver, _, _) = 
     initialState gen
-handleKeys (EventKey (SpecialKey KeyLeft) Down _ _) (player, obs, gen, t, status, score)
+handleKeys (EventKey (SpecialKey KeyLeft) Down _ _) (player, obs, gen, t, status, score, obsSpeed)
     | status == Running && playerPosition player > (-windowWidth / 2 + 25) = 
-        (player { playerPosition = playerPosition player - playerSpeed * 10 }, obs, gen, t, status, score)
-handleKeys (EventKey (SpecialKey KeyRight) Down _ _) (player, obs, gen, t, status, score) 
+        (player { playerPosition = playerPosition player - playerSpeed * 10 }, obs, gen, t, status, score, obsSpeed)
+handleKeys (EventKey (SpecialKey KeyRight) Down _ _) (player, obs, gen, t, status, score, obsSpeed) 
     | status == Running && playerPosition player < (windowWidth / 2 - 25) = 
-        (player { playerPosition = playerPosition player + playerSpeed * 10 }, obs, gen, t, status, score)
-handleKeys (EventKey (Char ' ') Down _ _) (_, _, gen, _, GameOver, score) = 
+        (player { playerPosition = playerPosition player + playerSpeed * 10 }, obs, gen, t, status, score, obsSpeed)
+handleKeys (EventKey (Char ' ') Down _ _) (_, _, gen, _, GameOver, _, _) = 
     initialState gen
 handleKeys _ s = s
+
 
 --
 -- Função para detectar a colisão com o obstáculo
@@ -71,13 +76,13 @@ collisionDetected player obstacle =
 --
 
 render :: GameState -> Picture
-render (player, obstacles, _, _, status, score) =
+render (player, obstacles, _, _, status, score, _) =  -- Adicionamos um _ para ignorar o currentObstacleSpeed
     case status of
         Menu     -> pictures [menuPic, menuStart]
         Running  -> pictures [scorePic, playerPic, obstaclesPic]
         GameOver -> pictures [scorePic, gameOverPic, gameOverRestart]
   where
-    scorePic = translate (-windowWidth/2 + 20) (windowHeigth/2) $ scale 0.2 0.2 $ color black $ text $ "Score: " ++ show score
+    scorePic = translate (-windowWidth/2 + 20) (windowHeigth/2 - 20) $ scale 0.2 0.2 $ color black $ text $ "Score: " ++ show score
     playerPic = translate (playerPosition player) (-340) $ color red $ rectangleSolid 50 50
     obstaclePic obs = translate (obstaclePosition obs) (obstacleY obs) $ color blue $ rectangleSolid 50 100
     obstaclesPic = pictures $ map obstaclePic obstacles
@@ -103,18 +108,23 @@ boldText x y c str =
 --
 
 update :: Float -> GameState -> GameState
-update t state@(_, _, _, _, Menu, _) = state
-update t (player, obstacles, gen, time, status, score) 
-    | status == GameOver = (player, obstacles, gen, time, GameOver, score)
-    | any (collisionDetected player) obstacles = (player, obstacles, gen, time, GameOver, score)
-    | time > 1  = (player, newObstacle : movedObstacles, newGen, 0, Running, score + 1)
-    | otherwise = (player, movedObstacles, gen, time + t, Running, score)
+update t state@(_, _, _, _, Menu, _, _) = state
+update t (player, obstacles, gen, time, status, score, obsSpeed) 
+    | status == GameOver = (player, obstacles, gen, time, GameOver, score, obsSpeed)
+    | any (collisionDetected player) obstacles = (player, obstacles, gen, time, GameOver, score, obsSpeed)
+    | time > 1  = (player, newObstacle : movedObstacles, newGen, 0, Running, newScore, newObsSpeed)
+    | otherwise = (player, movedObstacles, gen, time + t, Running, score, obsSpeed)
   where
     movedObstacles = filter (\o -> obstacleY o > -400) $ map moveObstacle obstacles
-    moveObstacle obs = obs { obstacleY = obstacleY obs - obstacleSpeed }
+    moveObstacle obs = obs { obstacleY = obstacleY obs - obsSpeed }
 
     (obstaclePos, newGen) = randomR (-windowWidth / 2 + 25, windowWidth / 2 - 25) gen
     newObstacle = Obstacle obstaclePos 400
+    
+    newScore = score + 1
+    newObsSpeed = if newScore `mod` 10 == 0 then obsSpeed + 3 else obsSpeed
+
+
 
 main :: IO ()
 main = do
