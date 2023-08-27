@@ -53,7 +53,7 @@ handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (_, obs, gen, t, Menu, scor
 handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (_, _, gen, _, GameOver, _, _) = 
     initialState gen
 handleKeys (EventKey (SpecialKey KeyLeft) Down _ _) (player, obs, gen, t, status, score, obsSpeed)
-    | status == Running && playerPosition player > (-windowWidth / 2 + 25) = 
+    | status == Running && playerPosition player > (-windowWidth / 2 + 200) = 
         (player { playerPosition = playerPosition player - playerSpeed * 10 }, obs, gen, t, status, score, obsSpeed)
 handleKeys (EventKey (SpecialKey KeyRight) Down _ _) (player, obs, gen, t, status, score, obsSpeed) 
     | status == Running && playerPosition player < (windowWidth / 2 - 25) = 
@@ -71,25 +71,45 @@ collisionDetected :: Player -> Obstacle -> Bool
 collisionDetected player obstacle = 
     abs (playerPosition player - obstaclePosition obstacle) < 50 && abs (-340 - obstacleY obstacle) < 75
 
+
+--
+-- Função  delimitar linha vertical
+--
+
+drawVerticalLine :: Picture
+drawVerticalLine = line [(marginX, -windowHeigth / 2), (marginX, windowHeigth / 2)]
+  where
+    marginX = -windowWidth / 2 + 175
+
 --
 -- Função que renderiza o jogo
 --
 
-render :: GameState -> Picture
-render (player, obstacles, _, _, status, score, _) =  -- Adicionamos um _ para ignorar o currentObstacleSpeed
+render (player, obstacles, _, _, status, score, obsSpeed) =  
     case status of
         Menu     -> pictures [menuPic, menuStart]
-        Running  -> pictures [scorePic, playerPic, obstaclesPic]
-        GameOver -> pictures [scorePic, gameOverPic, gameOverRestart]
+        Running  -> pictures [scorePic, levelPic, playerPic, obstaclesPic, drawVerticalLine]
+        GameOver -> pictures [scorePic, levelPic, gameOverPic, gameOverRestart]
   where
-    scorePic = translate (-windowWidth/2 + 20) (windowHeigth/2 - 20) $ scale 0.2 0.2 $ color black $ text $ "Score: " ++ show score
-    playerPic = translate (playerPosition player) (-340) $ color red $ rectangleSolid 50 50
+    scorePic = translate (-windowWidth/2 + 5) (windowHeigth/2 - 30) $ scale 0.2 0.2 $ color black $ text $ "Score: " ++ show score
+    levelPic = translate (-windowWidth/2 + 5) (windowHeigth/2 - 60) $ scale 0.2 0.2 $ color black $ text $ "Nivel: " ++ show (calculateLevel obsSpeed)
+    playerPic = translate (playerPosition player) (-250) $ color red $ rectangleSolid 50 50
     obstaclePic obs = translate (obstaclePosition obs) (obstacleY obs) $ color blue $ rectangleSolid 50 100
     obstaclesPic = pictures $ map obstaclePic obstacles
     gameOverPic = boldText (-100) 0 red "Game Over"
     gameOverRestart = scale 0.2 0.2 $ translate (-700) (-200) $ color black $ text "Press SPACE to restart"
     menuPic = boldText (-165) 0 black "Infinite Run Game"
     menuStart = scale 0.2 0.2 $ translate (-700) (-200) $ color black $ text "Press SPACE to Start"
+
+--
+-- Função que atualiza o nível conforme velocidade dos obstáculos
+--
+
+calculateLevel :: Float -> Int
+calculateLevel obsSpeed = round ((obsSpeed - initialObsSpeed) / levelIncrease) + 1
+  where
+    initialObsSpeed = 5
+    levelIncrease = 3
 
 --
 -- Função auxiliar para transformar o texto em bold
@@ -118,17 +138,14 @@ update t (player, obstacles, gen, time, status, score, obsSpeed)
     movedObstacles = filter (\o -> obstacleY o > -400) $ map moveObstacle obstacles
     moveObstacle obs = obs { obstacleY = obstacleY obs - obsSpeed }
 
-    (obstaclePos, newGen) = randomR (-windowWidth / 2 + 25, windowWidth / 2 - 25) gen
+    (obstaclePos, newGen) = randomR (-windowWidth / 2 + 200, windowWidth / 2 - 25) gen
     newObstacle = Obstacle obstaclePos 400
     
     newScore = score + 1
     newObsSpeed = if newScore `mod` 10 == 0 then obsSpeed + 3 else obsSpeed
 
-
-
 main :: IO ()
 main = do
     g <- getStdGen
     let state = initialState g
-    play (InWindow "Infinite Run Game" (round windowWidth, 400) (10, 10)) white 60 state render handleKeys update
-
+    play (InWindow "Infinite Run Game" (round windowWidth, round windowHeigth) (10, 10)) white 60 state render handleKeys update
