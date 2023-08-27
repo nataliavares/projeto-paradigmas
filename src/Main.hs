@@ -25,12 +25,15 @@ type GameState = (Player, [Obstacle], StdGen, Float, GameStatus, Int)
 
 windowWidth :: Float
 windowWidth = 800
+
 windowHeigth :: Float
 windowHeigth = 600
-playerSpeed :: Float
-playerSpeed = 5
+
 obstacleSpeed :: Float
 obstacleSpeed = 5
+
+playerSpeed :: Float
+playerSpeed = obstacleSpeed
 
 --
 -- Função para o estado inicial
