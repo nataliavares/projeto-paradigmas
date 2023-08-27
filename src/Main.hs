@@ -77,7 +77,7 @@ collisionDetected player obstacle =
 --
 
 drawVerticalLine :: Picture
-drawVerticalLine = line [(marginX, -windowHeigth / 2), (marginX, windowHeigth / 2)]
+drawVerticalLine = color white $ line [(marginX, -windowHeigth / 2), (marginX, windowHeigth / 2)]
   where
     marginX = -windowWidth / 2 + 175
 
@@ -91,15 +91,29 @@ render (player, obstacles, _, _, status, score, obsSpeed) =
         Running  -> pictures [scorePic, levelPic, playerPic, obstaclesPic, drawVerticalLine]
         GameOver -> pictures [scorePic, levelPic, gameOverPic, gameOverRestart]
   where
-    scorePic = translate (-windowWidth/2 + 5) (windowHeigth/2 - 30) $ scale 0.2 0.2 $ color black $ text $ "Score: " ++ show score
-    levelPic = translate (-windowWidth/2 + 5) (windowHeigth/2 - 60) $ scale 0.2 0.2 $ color black $ text $ "Nivel: " ++ show (calculateLevel obsSpeed)
-    playerPic = translate (playerPosition player) (-250) $ color red $ rectangleSolid 50 50
-    obstaclePic obs = translate (obstaclePosition obs) (obstacleY obs) $ color blue $ rectangleSolid 50 100
+    scorePic = translate (-windowWidth/2 + 5) (windowHeigth/2 - 30) $ scale 0.2 0.2 $ color white $ text $ "Score: " ++ show score
+    levelPic = translate (-windowWidth/2 + 5) (windowHeigth/2 - 60) $ scale 0.2 0.2 $ color white $ text $ "Nivel: " ++ show (calculateLevel obsSpeed)
+    -- playerPic = translate (playerPosition player) (-250) $ color blue $ rectangleSolid 50 80
+    
+    playerPic = translate (playerPosition player) (-250) $ color blue $ pictures
+      [ rectangleSolid 40 70 -- Corpo do carro
+      , translate (-20) (-25) $ color white $ rectangleSolid 10 20 -- Roda esquerda traseira
+      , translate 20 (-25) $ color white $ rectangleSolid 10 20 -- Roda direita traseira
+      , translate (-20) 25 $ color white $ rectangleSolid 10 20 -- Roda esquerda dianteira
+      , translate 20 25 $ color white $ rectangleSolid 10 20 -- Roda direita dianteira
+      , translate 0 0 $ color blue $ rectangleSolid 40 70
+      , translate 13 73 $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, -40), (10, 0) ] -- Farol direito
+      , translate (-13) 73 $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, -40), (10, 0) ] -- Farol esquerdo
+      , translate 0 20 $ color (withAlpha 0.5 white) $ rectangleSolid 30 10 -- Vidro dianteiro
+      , translate 0 (-15) $ color black $ rectangleSolid 30 30
+      ]
+    
+    obstaclePic obs = translate (obstaclePosition obs) (obstacleY obs) $ color red $ rectangleSolid 50 100
     obstaclesPic = pictures $ map obstaclePic obstacles
-    gameOverPic = boldText (-100) 0 red "Game Over"
-    gameOverRestart = scale 0.2 0.2 $ translate (-700) (-200) $ color black $ text "Press SPACE to restart"
-    menuPic = boldText (-165) 0 black "Infinite Run Game"
-    menuStart = scale 0.2 0.2 $ translate (-700) (-200) $ color black $ text "Press SPACE to Start"
+    gameOverPic = boldText (-100) 0 white "Game Over"
+    gameOverRestart = scale 0.2 0.2 $ translate (-700) (-200) $ color white $ text "Press SPACE to restart"
+    menuPic = boldText (-165) 0 white "Infinite Run Game"
+    menuStart = scale 0.2 0.2 $ translate (-700) (-200) $ color white $ text "Press SPACE to Start"
 
 --
 -- Função que atualiza o nível conforme velocidade dos obstáculos
@@ -118,7 +132,7 @@ calculateLevel obsSpeed = round ((obsSpeed - initialObsSpeed) / levelIncrease) +
 boldText :: Float -> Float -> Color -> String -> Picture
 boldText x y c str = 
     pictures 
-    [ translate (x + dx) (y + dy) $ scale 0.3 0.3 $ color c $ text str
+    [ translate (x + dx) (y + dy) $ scale 0.3 0.3 $ color white $ text str
     | dx <- [-1, 0, 1], dy <- [-1, 0, 1]
     ]
 
@@ -148,4 +162,4 @@ main :: IO ()
 main = do
     g <- getStdGen
     let state = initialState g
-    play (InWindow "Infinite Run Game" (round windowWidth, round windowHeigth) (10, 10)) white 60 state render handleKeys update
+    play (InWindow "Infinite Run Game" (round windowWidth, round windowHeigth) (10, 10)) black 60 state render handleKeys update
