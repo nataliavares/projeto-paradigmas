@@ -156,7 +156,7 @@ drawGame (player, obstacles, _, _, status, score, obsSpeed, record) =
           [ normalText (0.15) (-120) (-10) white "To change car color press:"
           , normalText (0.15) (-35) (-40) blue "B - blue"
           , normalText (0.15) (-42) (-60) green "G - green"
-          , normalText (0.15) (-37) (-80) cyan "C - cyan"
+          , normalText (0.15) (-37) (-80) yellow "Y - yellow"
           , normalText (0.10) (-40) (-100) white "(default is blue)"
           , normalText (0.2) (-130) (-140) white "Press SPACE to Start"
           ]
