@@ -153,16 +153,16 @@ drawGame (player, obstacles, _, _, status, score, obsSpeed, record) =
           ]
     -- Texto tela Menu
     menuShow = pictures 
-          [ boldText (-165) 40 white "Infinite Run Game"
-          , normalText (0.15) (-120) (-10) white "To change car color press:"
-          , normalText (0.15) (-35) (-40) blue "B - blue"
-          , translate (-60) (0) $ drawCarPlayer (Player 0 blue)
-          , normalText (0.15) (-42) (-60) green "G - green"
-          , translate (0) (0) $ drawCarPlayer (Player 0 green)
-          , normalText (0.15) (-37) (-80) yellow "Y - yellow"
-          , translate (60) (0) $ drawCarPlayer (Player 0 yellow)
-          , normalText (0.10) (-40) (-100) white "(default is blue)"
-          , normalText (0.2) (-130) (-140) white "Press SPACE to Start"
+          [ boldText (-165) 200 white "Infinite Run Game"
+          , normalText (0.15) (-120) (150) white "To change car color press:"
+          , normalText (0.15) (-200) (120) blue "B - blue"
+          , translate (-150) (280) $ drawCarPlayer (Player 0 blue)
+          , normalText (0.15) (-50) (120) green "G - green"
+          , translate (0) (280) $ drawCarPlayer (Player 0 green)
+          , normalText (0.15) (100) (120) yellow "Y - yellow"
+          , translate (150) (280) $ drawCarPlayer (Player 0 yellow)
+          , normalText (0.10) (-40) (-50) white "(default is blue)"
+          , normalText (0.2) (-130) (-180) white "Press SPACE to Start"
           ]
 
 --
