@@ -6,7 +6,9 @@ import System.Random
 -- Definição dos tipos de dados
 --
 
-data Player = Player { playerX :: Float }
+data Player = Player { playerX :: Float
+                     , playerColor :: Color }
+
 
 data Obstacle = Obstacle { obstacleX :: Float
                 , obstacleY :: Float }
@@ -50,6 +52,9 @@ playerSpeed = 5
 restartRecord :: IO Int
 restartRecord = return 0
 
+returnPlayer :: IO Player
+returnPlayer = return (Player 0 blue)
+
 --------------------------------
 -- FUNÇÕES PRINCIPAIS DO JOGO --
 --------------------------------
@@ -58,24 +63,37 @@ restartRecord = return 0
 -- Função para o estado inicial
 --
 
-initialState :: StdGen -> Int -> GameState
-initialState g record = (Player 0, [], g, 0, Menu, 0, obstacleSpeed, record)
+initialState :: Player -> StdGen -> Int -> GameState
+initialState player g record = (player {playerX = 0} , [], g, 0, Menu, 0, obstacleSpeed, record)
+
 
 --
 -- Função para leitura dos inputs do teclado
 --
 
 handleKeys :: Event -> GameState -> GameState
-handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (_, obs, gen, t, Menu, score, obsSpeed, record) = 
-    (Player 0, obs, gen, t, Running, score, obsSpeed, record)
-handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (_, _, gen, _, GameOver, _, _, record) = 
-    initialState gen record
+handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (player, obs, gen, t, Menu, score, obsSpeed, record) = 
+    (player, obs, gen, t, Running, score, obsSpeed, record) -- Cor padrão ao iniciar
+handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (player, _, gen, _, GameOver, _, _, record) = 
+    initialState player gen record
 handleKeys (EventKey (SpecialKey KeyLeft) Down _ _) (player, obs, gen, t, status, score, obsSpeed, record)
     | status == Running && playerX player > (-windowWidth / 2 + 200) = 
         (player { playerX = playerX player - playerSpeed * 10 }, obs, gen, t, status, score, obsSpeed, record)
 handleKeys (EventKey (SpecialKey KeyRight) Down _ _) (player, obs, gen, t, status, score, obsSpeed, record) 
     | status == Running && playerX player < (windowWidth / 2 - 25) = 
         (player { playerX = playerX player + playerSpeed * 10 }, obs, gen, t, status, score, obsSpeed, record)
+handleKeys (EventKey (Char 'b') Down _ _) (player, obs, gen, t, Menu, score, obsSpeed, record) = 
+    (player { playerColor = blue }, obs, gen, t, Menu, score, obsSpeed, record)
+handleKeys (EventKey (Char 'g') Down _ _) (player, obs, gen, t, Menu, score, obsSpeed, record) = 
+    (player { playerColor = green }, obs, gen, t, Menu, score, obsSpeed, record)
+handleKeys (EventKey (Char 'y') Down _ _) (player, obs, gen, t, Menu, score, obsSpeed, record) = 
+    (player { playerColor = yellow }, obs, gen, t, Menu, score, obsSpeed, record)
+handleKeys (EventKey (Char 'B') Down _ _) (player, obs, gen, t, Menu, score, obsSpeed, record) = 
+    (player { playerColor = blue }, obs, gen, t, Menu, score, obsSpeed, record)
+handleKeys (EventKey (Char 'G') Down _ _) (player, obs, gen, t, Menu, score, obsSpeed, record) = 
+    (player { playerColor = green }, obs, gen, t, Menu, score, obsSpeed, record)
+handleKeys (EventKey (Char 'Y') Down _ _) (player, obs, gen, t, Menu, score, obsSpeed, record) = 
+    (player { playerColor = yellow }, obs, gen, t, Menu, score, obsSpeed, record)
 handleKeys _ s = s
 
 
@@ -83,13 +101,13 @@ handleKeys _ s = s
 -- Função que retorna o carrinho do player com a cor desejada
 --
 
-drawCarPlayer :: Player -> Color -> Picture
-drawCarPlayer p c = translate (playerX p) (-250) $ pictures
+drawCarPlayer :: Player -> Picture
+drawCarPlayer p = translate (playerX p) (-250) $ pictures
       [ translate (-20) (-25) $ color white $ rectangleSolid 10 20 -- Roda esquerda traseira
       , translate 20 (-25) $ color white $ rectangleSolid 10 20 -- Roda direita traseira
       , translate (-20) 25 $ color white $ rectangleSolid 10 20 -- Roda esquerda dianteira
       , translate 20 25 $ color white $ rectangleSolid 10 20 -- Roda direita dianteira
-      , translate 0 0 $ color c $ rectangleSolid 40 70 -- Corpo do carro
+      , translate 0 0 $ color (playerColor p) $ rectangleSolid 40 70 -- Corpo do carro
       , translate 13 73 $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, -40), (10, 0) ] -- Farol direito
       , translate (-13) 73 $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, -40), (10, 0) ] -- Farol esquerdo
       , translate 0 20 $ color (withAlpha 0.5 white) $ rectangleSolid 30 10 -- Vidro dianteiro
@@ -123,15 +141,25 @@ drawGame (player, obstacles, _, _, status, score, obsSpeed, record) =
         Running  -> pictures [scorePic, levelPic, recordPic, playerPic, obstaclesPic, drawVerticalLine]
         GameOver -> pictures [scorePic, levelPic, recordPic, gameOverPic, gameOverRestart]
   where
-    scorePic = normalText (-windowWidth/2 + 5) (windowHeigth/2 - 30) white ("Score: " ++ show score)
-    levelPic = normalText (-windowWidth/2 + 5) (windowHeigth/2 - 60) white ("Level: " ++ show (calculateLevel obsSpeed))
-    recordPic = normalText (-windowWidth/2 + 5) (windowHeigth/2 - 120) white ("Record: " ++ show record)
-    playerPic = drawCarPlayer player blue
+    playerPic = drawCarPlayer player
     obstaclesPic = pictures $ map drawCarObstacle obstacles
+    -- Texto tela Game Over e Menu (score,level e record)    
+    scorePic = normalText (0.2) (-windowWidth/2 + 5) (windowHeigth/2 - 30) white ("Score: " ++ show score)
+    levelPic = normalText (0.2) (-windowWidth/2 + 5) (windowHeigth/2 - 60) white ("Level: " ++ show (calculateLevel obsSpeed))
+    recordPic = normalText (0.2) (-windowWidth/2 + 5) (windowHeigth/2 - 120) white ("Record: " ++ show record)
+    -- Texto tela Game Over
     gameOverPic = boldText (-100) 0 white "Game Over"
-    gameOverRestart = normalText (-145) (-50) white "Press SPACE to restart"
-    menuPic = boldText (-165) 0 white "Infinite Run Game"
-    menuStart = normalText (-135) (-50) white "Press SPACE to Start"
+    gameOverRestart = normalText (0.2) (-145) (-50) white "Press SPACE to restart"
+    -- Texto tela menu
+    menuPic = boldText (-165) 40 white "Infinite Run Game"
+    menuStart = pictures 
+          [ normalText (0.15) (-120) (-10) white "To change car color press:"
+          , normalText (0.15) (-35) (-40) blue "B - blue"
+          , normalText (0.15) (-42) (-60) green "G - green"
+          , normalText (0.15) (-37) (-80) cyan "C - cyan"
+          , normalText (0.10) (-40) (-100) white "(default is blue)"
+          , normalText (0.2) (-130) (-140) white "Press SPACE to Start"
+          ]
 
 --
 -- Função que atualiza o jogo
@@ -185,9 +213,9 @@ calculateLevel obsSpeed = round ((obsSpeed - initialObsSpeed) / levelIncrease) +
 -- Função auxiliar para texto em formato normal
 --
 
-normalText :: Float -> Float -> Color -> String -> Picture
-normalText x y c str = 
-    translate x y $ scale 0.2 0.2 $ color c $ text str
+normalText :: Float -> Float -> Float -> Color -> String -> Picture
+normalText e x y c str = 
+    translate x y $ scale e e $ color c $ text str
 
 --
 -- Função auxiliar para transformar o texto em bold
@@ -219,5 +247,15 @@ main :: IO ()
 main = do
     g <- getStdGen
     record <- restartRecord
-    let state = initialState g record
-    play (InWindow "Infinite Run Game" (round windowWidth, round windowHeigth) (10, 10)) black 60 state drawGame handleKeys updateGame
+    p <-  returnPlayer
+    let state = initialState p g record
+    play 
+      window
+      black 
+      60 
+      state 
+      drawGame 
+      handleKeys 
+      updateGame
+        where
+            window = InWindow "Infinite Run Game" (round windowWidth, round windowHeigth) (10, 10)
