@@ -1,9 +1,9 @@
 # Projeto Final 
-Ana Luiza Ferreira Figueiredo
+_Ana Luiza Ferreira Figueiredo_
 
-Lucas Venâncio de Almeida
+_Lucas Venâncio de Almeida_
 
-Natalia Leite Vares de Souza
+_Natalia Leite Vares de Souza_
 
 
 Implementação de um jogo de corrida infinita em Haskell
