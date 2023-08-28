@@ -155,8 +155,11 @@ drawGame (player, obstacles, _, _, status, score, obsSpeed, record) =
     menuStart = pictures 
           [ normalText (0.15) (-120) (-10) white "To change car color press:"
           , normalText (0.15) (-35) (-40) blue "B - blue"
+          , translate (-60) (0) $ drawCarPlayer (Player 0 blue)
           , normalText (0.15) (-42) (-60) green "G - green"
+          , translate (0) (0) $ drawCarPlayer (Player 0 green)
           , normalText (0.15) (-37) (-80) yellow "Y - yellow"
+        , translate (60) (0) $ drawCarPlayer (Player 0 yellow)
           , normalText (0.10) (-40) (-100) white "(default is blue)"
           , normalText (0.2) (-130) (-140) white "Press SPACE to Start"
           ]
