@@ -6,9 +6,9 @@ import System.Random
 -- Definição dos tipos de dados
 --
 
-data Player = Player { playerPosition :: Float }
+data Player = Player { playerX :: Float }
 
-data Obstacle = Obstacle { obstaclePosition :: Float
+data Obstacle = Obstacle { obstacleX :: Float
                 , obstacleY :: Float }
 
 data GameStatus = Menu | Running | GameOver
@@ -71,19 +71,53 @@ handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (_, obs, gen, t, Menu, scor
 handleKeys (EventKey (SpecialKey KeySpace) Down _ _) (_, _, gen, _, GameOver, _, _, record) = 
     initialState gen record
 handleKeys (EventKey (SpecialKey KeyLeft) Down _ _) (player, obs, gen, t, status, score, obsSpeed, record)
-    | status == Running && playerPosition player > (-windowWidth / 2 + 200) = 
-        (player { playerPosition = playerPosition player - playerSpeed * 10 }, obs, gen, t, status, score, obsSpeed, record)
+    | status == Running && playerX player > (-windowWidth / 2 + 200) = 
+        (player { playerX = playerX player - playerSpeed * 10 }, obs, gen, t, status, score, obsSpeed, record)
 handleKeys (EventKey (SpecialKey KeyRight) Down _ _) (player, obs, gen, t, status, score, obsSpeed, record) 
-    | status == Running && playerPosition player < (windowWidth / 2 - 25) = 
-        (player { playerPosition = playerPosition player + playerSpeed * 10 }, obs, gen, t, status, score, obsSpeed, record)
+    | status == Running && playerX player < (windowWidth / 2 - 25) = 
+        (player { playerX = playerX player + playerSpeed * 10 }, obs, gen, t, status, score, obsSpeed, record)
 handleKeys _ s = s
 
+
 --
--- Função que renderiza o jogo
+-- Função que retorna o carrinho do player com a cor desejada
 --
 
-render :: GameState -> Picture
-render (player, obstacles, _, _, status, score, obsSpeed, record) =  
+drawCarPlayer :: Player -> Color -> Picture
+drawCarPlayer p c = translate (playerX p) (-250) $ pictures
+      [ translate (-20) (-25) $ color white $ rectangleSolid 10 20 -- Roda esquerda traseira
+      , translate 20 (-25) $ color white $ rectangleSolid 10 20 -- Roda direita traseira
+      , translate (-20) 25 $ color white $ rectangleSolid 10 20 -- Roda esquerda dianteira
+      , translate 20 25 $ color white $ rectangleSolid 10 20 -- Roda direita dianteira
+      , translate 0 0 $ color c $ rectangleSolid 40 70 -- Corpo do carro
+      , translate 13 73 $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, -40), (10, 0) ] -- Farol direito
+      , translate (-13) 73 $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, -40), (10, 0) ] -- Farol esquerdo
+      , translate 0 20 $ color (withAlpha 0.5 white) $ rectangleSolid 30 10 -- Vidro dianteiro
+      , translate 0 (-15) $ color black $ rectangleSolid 30 30 -- Teto do carro
+      ]    
+--
+-- Função que retorna o carrinho obstáculo
+--
+
+drawCarObstacle :: Obstacle -> Picture
+drawCarObstacle o = translate (obstacleX o) (obstacleY o) $ pictures
+      [ translate (-20) (-25) $ color white $ rectangleSolid 10 20 -- Roda esquerda traseira
+      , translate 20 (-25) $ color white $ rectangleSolid 10 20 -- Roda direita traseira
+      , translate (-20) 25 $ color white $ rectangleSolid 10 20 -- Roda esquerda dianteira
+      , translate 20 25 $ color white $ rectangleSolid 10 20 -- Roda direita dianteira
+      , translate 0 0 $ color red $ rectangleSolid 40 70 -- Corpo do carro
+      , translate 13 (-73) $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, 40), (10, 0) ] -- Farol direito
+      , translate (-13) (-73) $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, 40), (10, 0) ] -- Farol esquerdo
+      , translate 0 (-20) $ color (withAlpha 0.5 white) $ rectangleSolid 30 10 -- Vidro dianteiro
+      , translate 0 15 $ color black $ rectangleSolid 30 30 -- Teto do carro
+      ]
+
+--
+-- Função que imprime o jogo completo
+--
+
+drawGame :: GameState -> Picture
+drawGame (player, obstacles, _, _, status, score, obsSpeed, record) =  
     case status of
         Menu     -> pictures [menuPic, menuStart]
         Running  -> pictures [scorePic, levelPic, recordPic, playerPic, obstaclesPic, drawVerticalLine]
@@ -92,9 +126,8 @@ render (player, obstacles, _, _, status, score, obsSpeed, record) =
     scorePic = normalText (-windowWidth/2 + 5) (windowHeigth/2 - 30) white ("Score: " ++ show score)
     levelPic = normalText (-windowWidth/2 + 5) (windowHeigth/2 - 60) white ("Level: " ++ show (calculateLevel obsSpeed))
     recordPic = normalText (-windowWidth/2 + 5) (windowHeigth/2 - 120) white ("Record: " ++ show record)
-    playerPic = drawCarPlayer (playerPosition player) (-250) blue
-    obstaclePic obs = drawCarObstacle (obstaclePosition obs) (obstacleY obs) red
-    obstaclesPic = pictures $ map obstaclePic obstacles
+    playerPic = drawCarPlayer player blue
+    obstaclesPic = pictures $ map drawCarObstacle obstacles
     gameOverPic = boldText (-100) 0 white "Game Over"
     gameOverRestart = normalText (-145) (-50) white "Press SPACE to restart"
     menuPic = boldText (-165) 0 white "Infinite Run Game"
@@ -104,9 +137,9 @@ render (player, obstacles, _, _, status, score, obsSpeed, record) =
 -- Função que atualiza o jogo
 --
 
-update :: Float -> GameState -> GameState
-update _ state@(_, _, _, _, Menu, _, _, _) = state
-update t (player, obstacles, gen, time, status, score, obsSpeed, record) 
+updateGame :: Float -> GameState -> GameState
+updateGame _ state@(_, _, _, _, Menu, _, _, _) = state
+updateGame t (player, obstacles, gen, time, status, score, obsSpeed, record) 
     | status == GameOver = (player, obstacles, gen, time, GameOver, score, obsSpeed, newRecord)
     | any (collisionDetected player) obstacles = (player, obstacles, gen, time, GameOver, score, obsSpeed, record)
     | time > 1  = (player, newObstacle : movedObstacles, newGen, 0, Running, newScore, newObsSpeed, record)
@@ -117,9 +150,9 @@ update t (player, obstacles, gen, time, status, score, obsSpeed, record)
 
     (obstaclePos, newGen) = randomR (-windowWidth / 2 + 200, windowWidth / 2 - 25) gen
     newObstacle = Obstacle obstaclePos 400
-    
-    newScore = score + 1
     newObsSpeed = if newScore `mod` 10 == 0 then obsSpeed + 2 else obsSpeed
+
+    newScore = score + 1
     newRecord = max score record
 
 ---------------------------------------------------
@@ -132,7 +165,7 @@ update t (player, obstacles, gen, time, status, score, obsSpeed, record)
 
 collisionDetected :: Player -> Obstacle -> Bool
 collisionDetected player obstacle = 
-    abs (playerPosition player - obstaclePosition obstacle) < 40 && abs (-340 - obstacleY obstacle) < 170
+    abs (playerX player - obstacleX obstacle) < 50 && abs (-340 - obstacleY obstacle) < 170
 
 --
 -- Função que atualiza o nível conforme velocidade dos obstáculos
@@ -147,39 +180,6 @@ calculateLevel obsSpeed = round ((obsSpeed - initialObsSpeed) / levelIncrease) +
 ----------------------------------
 -- FUNÇÕES AUXILIARES DE LAYOUT --
 ----------------------------------
---
--- Função que retorna o carrinho do player com a cor desejada
---
-
-drawCarPlayer :: Float -> Float -> Color -> Picture
-drawCarPlayer x y c = translate x y $ pictures
-      [ translate (-20) (-25) $ color white $ rectangleSolid 10 20 -- Roda esquerda traseira
-      , translate 20 (-25) $ color white $ rectangleSolid 10 20 -- Roda direita traseira
-      , translate (-20) 25 $ color white $ rectangleSolid 10 20 -- Roda esquerda dianteira
-      , translate 20 25 $ color white $ rectangleSolid 10 20 -- Roda direita dianteira
-      , translate 0 0 $ color c $ rectangleSolid 40 70 -- Corpo do carro
-      , translate 13 73 $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, -40), (10, 0) ] -- Farol direito
-      , translate (-13) 73 $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, -40), (10, 0) ] -- Farol esquerdo
-      , translate 0 20 $ color (withAlpha 0.5 white) $ rectangleSolid 30 10 -- Vidro dianteiro
-      , translate 0 (-15) $ color black $ rectangleSolid 30 30 -- Teto do carro
-      ]    
---
--- Função que retorna o carrinho obstáculo com a cor desejada
---
-
-drawCarObstacle :: Float -> Float -> Color -> Picture
-drawCarObstacle x y c = translate x y $ pictures
-      [ translate (-20) (-25) $ color white $ rectangleSolid 10 20 -- Roda esquerda traseira
-      , translate 20 (-25) $ color white $ rectangleSolid 10 20 -- Roda direita traseira
-      , translate (-20) 25 $ color white $ rectangleSolid 10 20 -- Roda esquerda dianteira
-      , translate 20 25 $ color white $ rectangleSolid 10 20 -- Roda direita dianteira
-      , translate 0 0 $ color c $ rectangleSolid 40 70 -- Corpo do carro
-      , translate 13 (-73) $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, 40), (10, 0) ] -- Farol direito
-      , translate (-13) (-73) $ color (withAlpha 0.5 yellow) $ polygon [ (-10, 0), (0, 40), (10, 0) ] -- Farol esquerdo
-      , translate 0 (-20) $ color (withAlpha 0.5 white) $ rectangleSolid 30 10 -- Vidro dianteiro
-      , translate 0 15 $ color black $ rectangleSolid 30 30 -- Teto do carro
-      ]
-
 
 --
 -- Função auxiliar para texto em formato normal
@@ -220,4 +220,4 @@ main = do
     g <- getStdGen
     record <- restartRecord
     let state = initialState g record
-    play (InWindow "Infinite Run Game" (round windowWidth, round windowHeigth) (10, 10)) black 60 state render handleKeys update
+    play (InWindow "Infinite Run Game" (round windowWidth, round windowHeigth) (10, 10)) black 60 state drawGame handleKeys updateGame
